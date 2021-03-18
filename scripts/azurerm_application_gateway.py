@@ -219,6 +219,11 @@ def azurerm_application_gateway(crf,cde,crg,headers,requests,sub,json,az2tfmess,
                     fr.write('\t port = "' + str(bport) + '"\n')
                     fr.write('\t protocol = "' + bproto + '"\n')
                     fr.write('\t cookie_based_affinity = "' + bcook + '"\n')
+                    try :
+                        bcookname=azr[i]["properties"]["backendHttpSettingsCollection"][j]["properties"]["affinityCookieName"]
+                        fr.write('\t affinity_cookie_name = "' + pname + '"\n')
+                    except KeyError:
+                        pass
                     fr.write('\t request_timeout = "' + str(btimo) + '"\n')
 
                     try:
