@@ -388,7 +388,7 @@ def azurerm_application_gateway(crf,cde,crg,headers,requests,sub,json,az2tfmess,
                         pass
                     try :
                         rc=azr[i]["properties"]["requestRoutingRules"][j]["properties"]["redirectConfiguration"]["id"].split("/")[10]
-                        fr.write('\t redirectConfiguration = "' +    rc + '"\n')
+                        fr.write('\t redirect_configuration_name = "' +    rc + '"\n')
                     except KeyError:
                         pass
                     fr.write('\t }\n')
