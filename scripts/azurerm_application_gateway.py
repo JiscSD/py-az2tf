@@ -221,7 +221,7 @@ def azurerm_application_gateway(crf,cde,crg,headers,requests,sub,json,az2tfmess,
                     fr.write('\t cookie_based_affinity = "' + bcook + '"\n')
                     try :
                         bcookname=azr[i]["properties"]["backendHttpSettingsCollection"][j]["properties"]["affinityCookieName"]
-                        fr.write('\t affinity_cookie_name = "' + pname + '"\n')
+                        fr.write('\t affinity_cookie_name = "' + bcookname + '"\n')
                     except KeyError:
                         pass
                     fr.write('\t request_timeout = "' + str(btimo) + '"\n')
@@ -335,13 +335,16 @@ def azurerm_application_gateway(crf,cde,crg,headers,requests,sub,json,az2tfmess,
                     
                     try :
                         bmbod=azr[i]["properties"]["probes"][j]["properties"]["match"]["body"] 
-                        if bmbod == "":
-                            fr.write('\t\t body = "' + '*' + '"\n')
-                        else:
+                        if bmbod != "":
                             fr.write('\t\t body = "' + bmbod + '"\n')
                     except KeyError:
                         pass
-                
+                    try :
+                        bmstat=azr[i]["properties"]["probes"][j]["properties"]["match"]["statusCodes"]
+                        fr.write('\t\t status_code = ["' + '","'.join(bmstat) + '"]\n')
+                    except KeyError:
+                        pass
+
                     fr.write('\t }\n')
                     fr.write('}\n')
                     
