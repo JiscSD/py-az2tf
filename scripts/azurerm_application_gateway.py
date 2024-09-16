@@ -61,6 +61,7 @@ def azurerm_application_gateway(crf,cde,crg,headers,requests,sub,json,az2tfmess,
             httpl=azr[i]["properties"]["httpListeners"]
             probes=azr[i]["properties"]["probes"]
             rrrs=azr[i]["properties"]["requestRoutingRules"]
+            redirects=azr[i]["properties"]["redirectConfigurations"]
             #urlpm=azr[i]["properties"]["urlPathMaps"]
             
             sslcerts=azr[i]["properties"]["sslCertificates"]
@@ -218,6 +219,11 @@ def azurerm_application_gateway(crf,cde,crg,headers,requests,sub,json,az2tfmess,
                     fr.write('\t port = "' + str(bport) + '"\n')
                     fr.write('\t protocol = "' + bproto + '"\n')
                     fr.write('\t cookie_based_affinity = "' + bcook + '"\n')
+                    try :
+                        bcookname=azr[i]["properties"]["backendHttpSettingsCollection"][j]["properties"]["affinityCookieName"]
+                        fr.write('\t affinity_cookie_name = "' + bcookname + '"\n')
+                    except KeyError:
+                        pass
                     fr.write('\t request_timeout = "' + str(btimo) + '"\n')
 
                     try:
@@ -329,16 +335,40 @@ def azurerm_application_gateway(crf,cde,crg,headers,requests,sub,json,az2tfmess,
                     
                     try :
                         bmbod=azr[i]["properties"]["probes"][j]["properties"]["match"]["body"] 
-                        if bmbod == "":
-                            fr.write('\t\t body = "' + '*' + '"\n')
-                        else:
+                        if bmbod != "":
                             fr.write('\t\t body = "' + bmbod + '"\n')
                     except KeyError:
                         pass
-                
+                    try :
+                        bmstat=azr[i]["properties"]["probes"][j]["properties"]["match"]["statusCodes"]
+                        fr.write('\t\t status_code = ["' + '","'.join(bmstat) + '"]\n')
+                    except KeyError:
+                        pass
+
                     fr.write('\t }\n')
                     fr.write('}\n')
                     
+
+# redirectConfiguration
+
+            icount=len(redirects)
+            if icount > 0 :
+                for j in range(0,icount):
+                    bname=azr[i]["properties"]["redirectConfigurations"][j]["name"]
+                    btyp=azr[i]["properties"]["redirectConfigurations"][j]["properties"]["redirectType"]
+                    blin=azr[i]["properties"]["redirectConfigurations"][j]["properties"]["targetListener"]["id"].split("/")[10]
+                    bincpath=azr[i]["properties"]["redirectConfigurations"][j]["properties"]["includePath"]
+                    bincqs=azr[i]["properties"]["redirectConfigurations"][j]["properties"]["includeQueryString"]
+
+                    fr.write('redirectConfiguration { \n')
+
+                    fr.write('\t name = "' + bname + '"\n')
+                    fr.write('\t redirect_type = "' + btyp + '"\n')
+                    fr.write('\t include_path = ' + ("true" if bincpath else "false") + '\n')
+                    fr.write('\t include_query_string = ' + ("true" if bincqs else "false") + '\n')
+                    fr.write('\t target_listener_name = "' + blin + '"\n')
+                    fr.write('\t }\n')
+
 
 # routing rules
 
@@ -362,6 +392,11 @@ def azurerm_application_gateway(crf,cde,crg,headers,requests,sub,json,az2tfmess,
                     try :
                         bhsn=azr[i]["properties"]["requestRoutingRules"][j]["properties"]["backendHttpSettings"]["id"].split("/")[10]
                         fr.write('\t backend_http_settings_name = "' +    bhsn + '"\n')
+                    except KeyError:
+                        pass
+                    try :
+                        rc=azr[i]["properties"]["requestRoutingRules"][j]["properties"]["redirectConfiguration"]["id"].split("/")[10]
+                        fr.write('\t redirect_configuration_name = "' +    rc + '"\n')
                     except KeyError:
                         pass
                     fr.write('\t }\n')
